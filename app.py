@@ -114,7 +114,7 @@
                 quebra_candidata = texto.rfind('!', inicio, fim)
             
             # Se encontrou um ponto de quebra válido, usa ele
-            if quebra_candidata != -1 and quebra_candidata >= inicio:
+            if (quebra_candidata != -1 and quebra_candidata >= inicio):
                 # Garante que a quebra não seja muito próxima do início do bloco
                 if (quebra_candidata - inicio) > (max_caracteres * 0.5) or (fim - quebra_candidata) < 50:
                     bloco_atual = texto[inicio:quebra_candidata + 1].strip()
@@ -197,6 +197,13 @@
         Envia um bloco de texto para a API Gemini para revisão e retorna o texto revisado.
         Emite atualizações de progresso via SocketIO.
         """
+        # Verifica se a API_KEY está definida antes de fazer a chamada
+        if not API_KEY:
+            error_msg = "Erro: API_KEY não configurada. Por favor, defina a variável de ambiente GEMINI_API_KEY."
+            print(error_msg)
+            socketio.emit('error_message', {'message': error_msg}, room=sid)
+            return None
+
         full_prompt = f"{REGRAS_REVISAO}\n\nTexto para auditoria:\n{bloco_de_texto}"
         
         payload = {

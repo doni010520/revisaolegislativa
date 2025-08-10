@@ -1,16 +1,16 @@
-    import os
-    import requests
-    import re
-    from flask import Flask, render_template, request
-    from flask_socketio import SocketIO, emit
-    from reportlab.lib.pagesizes import letter
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_RIGHT, TA_CENTER
-    from reportlab.lib.units import inch
-    import PyPDF2
-    import docx
-    import io
+import os
+import requests
+import re
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO, emit
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_RIGHT, TA_CENTER
+from reportlab.lib.units import inch
+import PyPDF2
+import docx
+import io
 
     app = Flask(__name__)
 

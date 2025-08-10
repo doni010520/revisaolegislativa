@@ -8,9 +8,9 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_RIGHT, TA_CENTER
 from reportlab.lib.units import inch
-import PyPDF2
-import docx
-import io
+# Removido: import PyPDF2
+# Removido: import docx
+import io # Reintroduzido: import io
 
 app = Flask(__name__)
 
@@ -142,37 +142,8 @@ def dividir_texto(texto, max_caracteres=3500):
     # Filtra blocos vazios que podem surgir de quebras indesejadas
     return [b for b in blocos if b.strip()]
 
-# --- Função para extrair texto de PDF ---
-def extrair_texto_de_pdf(pdf_file):
-    """
-    Extrai texto de um objeto de arquivo PDF carregado na memória.
-    """
-    text = ""
-    try:
-        # Use PdfReader para ler o PDF
-        reader = PyPDF2.PdfReader(pdf_file)
-        for page_num in range(len(reader.pages)):
-            page = reader.pages[page_num]
-            text += page.extract_text() or "" # Adiciona o texto da página ou uma string vazia
-    except Exception as e:
-        print(f"Erro ao extrair texto do PDF: {e}")
-        return None
-    return text
-
-# --- Função para extrair texto de DOCX ---
-def extrair_texto_de_docx(docx_file):
-    """
-    Extrai texto de um objeto de arquivo DOCX carregado na memória.
-    """
-    text = ""
-    try:
-        document = docx.Document(docx_file)
-        for para in document.paragraphs:
-            text += para.text + "\n" # Adiciona cada parágrafo e uma quebra de linha
-    except Exception as e:
-        print(f"Erro ao extrair texto do DOCX: {e}")
-        return None
-    return text
+# Removido: Função para extrair texto de PDF
+# Removido: Função para extrair texto de DOCX
 
 # --- Função para converter Markdown-like bold para HTML para Reportlab ---
 def converter_markdown_para_html_reportlab(text):
@@ -233,7 +204,7 @@ def revisar_bloco_com_gemini(bloco_de_texto, current_block, total_blocks, sid):
         except requests.exceptions.RequestException as e:
             error_msg = f"Erro na tentativa {i+1}/{retries} ao chamar a API para o bloco {current_block}: {e}"
             print(error_msg)
-            socketio.emit('progress_update', {'message': error_msg}, room=sid)
+            socketio.emit('error_message', {'message': error_msg}, room=sid)
             if i < retries - 1:
                 import time
                 time.sleep(2 ** i + 1) 
@@ -255,45 +226,14 @@ def handle_start_revision(data):
     nome_base_arquivo = "relatorio_auditoria_legislativa" # Nome padrão
     
     try:
-        # Verifica se um arquivo foi enviado via WebSocket
-        if data.get('file_data') and data.get('filename'):
-            filename = data['filename']
-            mimetype = data['file_mimetype']
-            file_bytes = bytes(data['file_data']) # Converte a lista de ints de volta para bytes
-
-            nome_base, extensao = os.path.splitext(filename)
-            nome_base_arquivo = re.sub(r'[^\w\-_\.]', '', nome_base.replace(" ", "_")) 
-
-            if extensao.lower() == '.pdf':
-                socketio.emit('progress_update', {'message': f'Arquivo PDF recebido: {filename}. Extraindo texto...'}, room=sid)
-                pdf_in_memory = io.BytesIO(file_bytes)
-                texto_extraido = extrair_texto_de_pdf(pdf_in_memory)
-                if texto_extraido:
-                    texto_para_auditoria = texto_extraido
-                    socketio.emit('progress_update', {'message': 'Texto extraído do PDF com sucesso.'}, room=sid)
-                else:
-                    socketio.emit('error_message', {'message': 'Erro ao extrair texto do PDF ou PDF vazio.'}, room=sid)
-                    return
-            elif extensao.lower() == '.docx':
-                socketio.emit('progress_update', {'message': f'Arquivo DOCX recebido: {filename}. Extraindo texto...'}, room=sid)
-                docx_in_memory = io.BytesIO(file_bytes)
-                texto_extraido = extrair_texto_de_docx(docx_in_memory)
-                if texto_extraido:
-                    texto_para_auditoria = texto_extraido
-                    socketio.emit('progress_update', {'message': 'Texto extraído do DOCX com sucesso.'}, room=sid)
-                else:
-                    socketio.emit('error_message', {'message': 'Erro ao extrair texto do DOCX ou DOCX vazio.'}, room=sid)
-                    return
-            else:
-                socketio.emit('error_message', {'message': 'Formato de arquivo não suportado. Por favor, envie um PDF ou DOCX.'}, room=sid)
-                return
+        # Removida a lógica de verificação e extração de arquivos
         
-        # Se nenhum arquivo foi enviado ou o processamento do arquivo falhou, tenta pegar o texto da textarea
-        if not texto_para_auditoria and data.get('text_content'):
+        # Pega o texto da textarea
+        if data.get('text_content'):
             texto_para_auditoria = data['text_content']
 
         if not texto_para_auditoria.strip():
-            socketio.emit('error_message', {'message': 'Por favor, cole um texto ou carregue um arquivo PDF/DOCX para revisão.'}, room=sid)
+            socketio.emit('error_message', {'message': 'Por favor, cole um texto para revisão.'}, room=sid)
             return
 
         blocos_originais = dividir_texto(texto_para_auditoria)
@@ -372,4 +312,3 @@ def test_disconnect():
 if __name__ == '__main__':
     # Em produção, debug=False. host='0.0.0.0' permite acesso externo.
     socketio.run(app, debug=False, host='0.0.0.0', port=5000)
-
